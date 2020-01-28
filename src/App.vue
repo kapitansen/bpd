@@ -1,10 +1,32 @@
 <template>
   <div id="app">
-    <Navbar/>
+    <b-navbar toggleable="sm" type="dark" variant="dark">
+      <b-navbar-toggle target="nav-text-collapse"></b-navbar-toggle>
+
+      <b-navbar-brand>BipolarBear</b-navbar-brand>
+
+      <b-collapse id="nav-text-collapse" is-nav>
+
+        <!-- Right aligned nav items -->
+        <b-navbar-nav class="ml-auto">
+
+          <b-nav-item-dropdown no-caret right>
+            <template v-slot:button-content>
+              <b-icon icon="list"/>
+            </template>
+            <b-dropdown-item @click="setRandomData(14)">14 случайных записей</b-dropdown-item>
+            <b-dropdown-item @click="setRandomData(30)">30 случайных записей</b-dropdown-item>
+            <b-dropdown-item @click="removeAllData">Удалить данные и начать с начала</b-dropdown-item>
+            <b-dropdown-item @click="showMonth = !showMonth">Неделя/Месяц</b-dropdown-item>
+            <b-dropdown-item @click="addFactor">Добавить фактор</b-dropdown-item>
+          </b-nav-item-dropdown>
+        </b-navbar-nav>
+      </b-collapse>
+    </b-navbar>
     <b-container fluid="md" class="main-container border shadow-sm p-3 mt-5 bg-white rounded">
       <b-row align-v="center" align-h="center">
         <Factor 
-          v-for="factor in factors.datasets"
+          v-for="factor in factors"
           v-bind:key="factor.id"
           v-bind:factor="factor"
           v-bind:label.sync="factor.label"
@@ -13,12 +35,12 @@
       </b-row>
       <b-row cols="1" class="graph-container mt-3 p-3">
         <b-col id="chart" class="rounded">
-          <Chart :chartdata="factors" :options="chartOptions"/>
+          <Chart :factorsdata="factors" :showMonth="showMonth" :options="chartOptions"/>
         </b-col>
       </b-row>
       <b-row cols="1">
          <b-col 
-          v-for="factor in factors.datasets"
+          v-for="factor in factors"
         >{{factor.label + ' -> ' + factor.data}}</b-col>
       </b-row>
     </b-container>
@@ -26,87 +48,91 @@
 </template>
 
 <script>
-import Navbar from './components/Navbar.vue'
 import Factor from './components/Factor.vue'
 import Chart from './components/Chart.vue'
+
+function randomDataSet(dataSetSize, minValue, maxValue) {
+  return new Array(dataSetSize).fill(0).map(function(n) {
+    return Math.round(Math.random() * (maxValue - minValue) + minValue);
+  });
+}
 
 export default {
   name: 'app',
   components: {
-    Navbar,
     Factor,
     Chart
   },
   data () {
     return {
-      factors: {
-        labels: Array.from(Array(30+1).keys()),
-        datasets: [
-          {
-            id: 1,
-            label: 'Настроение',
-            data: [1,3,0,1,2,4,5,5,5,5] 
-          },
-          {
-            id: 2,
-            label: 'Энергия',
-            data: [1,3,0,1,2,4,5] 
-          },
-          {
-            id: 3,
-            label: 'Активность',
-            data: [1,3,0,1,2,4,5] 
-          },
-          {
-            id: 4,
-            label: 'Активность',
-            data: [1,3,0,1,2,4,5] 
-          },
-          {
-            id: 5,
-            label: 'Активность',
-            data: [1,3,0,1,2,4,5] 
-          },
-          {
-            id: 6,
-            label: 'Активность',
-            data: [1,3,0,1,2,4,5] 
-          },
-        ],
-      },
+      factors: [],
       chartOptions: {
         responsive: true,
-        maintainAspectRatio: false
+        maintainAspectRatio: false,
+        tooltips: {
+          mode: 'index',
+          intersect: false,
+        },
+        hover: {
+          mode: 'nearest',
+          intersect: true
+        },
       },
       completedToday: false,
       showMonth: false
     }
   },
   watch: {
-    'factors.datasets': {
+    factors: {
       handler: "saveFactors",
       deep: true,
     }
   },
   mounted() {
-    // localStorage.removeItem('factors');
     if (localStorage.getItem('factors')) {
       try {
-        this.factors.datasets = JSON.parse(localStorage.getItem('factors'));
+        this.factors = JSON.parse(localStorage.getItem('factors'));
       } catch(e) {
         localStorage.removeItem('factors');
       }
     }
   },
   methods: {
-    addFactor: function (factor) {
-      this.factors.datasets.push(factor);
+    addFactor: function () {
+      let newfactor = {
+        "id": this.factors.length+1,
+        "label": "Новый фактор",
+        "data": []
+      };
+      this.factors.push(newfactor);
       this.saveFactors();
     },
     saveFactors() {
-      console.log(this.factors.datasets);
-      const parsed = JSON.stringify(this.factors.datasets);
+      const parsed = JSON.stringify(this.factors);
       localStorage.setItem('factors', parsed);
+    },
+    setRandomData: function (num) {
+      this.factors = [];
+      let newdata = [];
+      for (let i=1; i < 6; i++) {
+        newdata.push({
+          id: i,
+          label: 'Параметр'+i,
+          data: randomDataSet(num,1,5) 
+        });
+      }
+      this.factors = newdata;
+    },
+    removeAllData: function () {
+      let newdata = [];
+      for (let i=1; i < 6; i++) {
+        newdata.push({
+          id: i,
+          label: 'Параметр'+i,
+          data: [] 
+        });
+      }
+      this.factors = newdata;
     }
   },
 }

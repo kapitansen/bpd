@@ -60,7 +60,7 @@
 	.factor-rating {
 		text-align: center;
 	}
-	label.btn.btn-outline-secondary.btn-sm.active {
+	label.btn.btn-outline-secondary.btn-sm.disabled.active {
 	    background: #28a745;
 	    color: #fff;
 	}
