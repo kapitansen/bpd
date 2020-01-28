@@ -24,7 +24,7 @@
       </b-collapse>
     </b-navbar>
     <b-container fluid="md" class="main-container border shadow-sm p-3 mt-5 bg-white rounded">
-      <b-row align-v="center" align-h="center">
+      <b-row align-v="center" align-h="center" class="mt-3">
         <Factor 
           v-for="factor in factors"
           v-bind:key="factor.id"
@@ -38,11 +38,11 @@
           <Chart :factorsdata="factors" :showMonth="showMonth" :options="chartOptions"/>
         </b-col>
       </b-row>
-      <b-row cols="1">
+      <!-- <b-row cols="1">
          <b-col 
           v-for="factor in factors"
         >{{factor.label + ' -> ' + factor.data}}</b-col>
-      </b-row>
+      </b-row> -->
     </b-container>
   </div>
 </template>
@@ -68,6 +68,21 @@ export default {
       factors: [],
       chartOptions: {
         responsive: true,
+        legend: {
+          position: 'bottom',
+          labels: {
+            usePointStyle: true,
+          }
+        },
+        scales: {
+          yAxes: [{
+            ticks: {
+              min: 1,
+              max: 5,
+              stepSize: 1
+            }
+          }]
+        },
         maintainAspectRatio: false,
         tooltips: {
           mode: 'index',
@@ -108,7 +123,16 @@ export default {
       this.saveFactors();
     },
     saveFactors() {
+      let lengths = this.factors.map(function(f){return f.data.length;});
+      var data_max = (Math.max.apply(Math, lengths));
       const parsed = JSON.stringify(this.factors);
+      if (data_max > 30) {
+        var newfactors = this.factors.map(function(f){
+          f.data = f.data.slice(data_max-30);
+          return f;
+        });
+        const parsed = JSON.stringify(this.newfactors);
+      }
       localStorage.setItem('factors', parsed);
     },
     setRandomData: function (num) {
@@ -137,3 +161,18 @@ export default {
   },
 }
 </script>
+
+<style>
+  body {
+    background: url(/bg5.jpg);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-size: auto;
+  }
+  .bg-dark {
+      background-color: #233140 !important;
+  }
+  .factor-edit {
+    height: 23px;
+  }
+</style>

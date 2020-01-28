@@ -21,6 +21,8 @@
 			    size="sm"
 			    :name="'factor'+factor.id"
 			    @change="changeFactorData"
+			    @click.middle="test"
+			    @mouseDown.middle="test"
 			></b-form-radio-group>
 		</b-form-group>
 	</b-col>
@@ -39,10 +41,12 @@
       }
     },
     methods: {
+    	test: function() {
+    		console.log('test');
+    	},
     	changeFactorData: function(checked) { 
 			this.disabled = true;
 			let newdata = this.factor.data.concat(checked);
-			if(newdata.length > 30) newdata.shift();
 			this.$emit('update:data', newdata);
     	},
     	changeFactorName: function(event) {

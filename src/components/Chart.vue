@@ -26,10 +26,21 @@
 				let chartdatasets = [];
 				this.showMonth == true? chartlabels = Array.from(Array(30+1).keys()) : chartlabels = Array.from(Array(14+1).keys()),
 				chartlabels.shift();
+				if (this.showMonth != true) {
+					// Находим самый длинный массив данных
+					let lengths = fdata.map(function(f){return f.data.length;});
+					var data_max = (Math.max.apply(Math, lengths));
+				}
 				chartdatasets = fdata.map((factor, i) => {
+					if (this.showMonth != true) {
+						if (data_max > 14) {
+							factor.data = factor.data.slice(data_max-14);
+						}
+					}
 					factor.borderColor = colors[i];
 					factor.backgroundColor = colors[i]; 
 					factor.fill = false; 
+					factor.tension = 0.2; 
 					return factor;
 				});
 				return {
