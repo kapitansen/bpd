@@ -3,7 +3,10 @@
     <b-navbar toggleable="sm" type="dark" variant="dark">
       <b-navbar-toggle target="nav-text-collapse"></b-navbar-toggle>
 
-      <b-navbar-brand>BipolarBear</b-navbar-brand>
+      <b-navbar-brand href="#">
+        <img src="/favicon/favicon-32x32.png" class="d-inline-block align-top mr-1">
+        Mood Journal
+      </b-navbar-brand>
 
       <b-collapse id="nav-text-collapse" is-nav>
 
@@ -23,7 +26,7 @@
         </b-navbar-nav>
       </b-collapse>
     </b-navbar>
-    <b-container fluid="md" class="main-container border shadow-sm p-3 mt-5 bg-white rounded">
+    <b-container fluid="lg" class="main-container border shadow-sm p-3 mt-5 bg-white rounded">
       <b-row align-v="center" align-h="center" class="mt-3">
         <Factor 
           v-for="factor in factors"
@@ -31,6 +34,8 @@
           v-bind:factor="factor"
           v-bind:label.sync="factor.label"
           v-bind:data.sync="factor.data"
+          v-bind:descr.sync="factor.descr"
+          v-on:delete="delFactor"
         ></Factor>
       </b-row>
       <b-row cols="1" class="graph-container mt-3 p-3">
@@ -38,11 +43,6 @@
           <Chart :factorsdata="factors" :showMonth="showMonth" :options="chartOptions"/>
         </b-col>
       </b-row>
-      <!-- <b-row cols="1">
-         <b-col 
-          v-for="factor in factors"
-        >{{factor.label + ' -> ' + factor.data}}</b-col>
-      </b-row> -->
     </b-container>
   </div>
 </template>
@@ -65,36 +65,36 @@ export default {
   },
   data () {
     return {
-      factors: [],
-      chartOptions: {
-        responsive: true,
-        legend: {
-          position: 'bottom',
-          labels: {
-            usePointStyle: true,
-          }
-        },
-        scales: {
-          yAxes: [{
-            ticks: {
-              min: 1,
-              max: 5,
-              stepSize: 1
-            }
-          }]
-        },
-        maintainAspectRatio: false,
-        tooltips: {
-          mode: 'index',
-          intersect: false,
-        },
-        hover: {
-          mode: 'nearest',
-          intersect: true
-        },
-      },
-      completedToday: false,
-      showMonth: false
+    	factors: [],
+    	chartOptions: {
+    	  responsive: true,
+    	  legend: {
+    	    position: 'bottom',
+    	    labels: {
+    	      usePointStyle: true,
+    	    }
+    	  },
+    	  scales: {
+    	    yAxes: [{
+    	      ticks: {
+    	        min: -3,
+    	        max: 3,
+    	        stepSize: 1
+    	      }
+    	    }]
+    	  },
+    	  maintainAspectRatio: false,
+    	  tooltips: {
+    	    mode: 'index',
+    	    intersect: false,
+    	  },
+    	  hover: {
+    	    mode: 'nearest',
+    	    intersect: true
+    	  },
+    	},
+     	lastChangeDate: '',
+     	showMonth: false
     }
   },
   watch: {
@@ -107,8 +107,10 @@ export default {
     if (localStorage.getItem('factors')) {
       try {
         this.factors = JSON.parse(localStorage.getItem('factors'));
+        this.lastChangeDate = localStorage.getItem('lastChangeDate');
       } catch(e) {
         localStorage.removeItem('factors');
+        localStorage.removeItem('lastChangeDate');
       }
     }
   },
@@ -120,7 +122,13 @@ export default {
         "data": []
       };
       this.factors.push(newfactor);
-      this.saveFactors();
+    },
+    delFactor: function (id) {
+      if (confirm('Удалить параметр и все данные?')) {
+        let factorId = this.factors.findIndex(factor => factor.id === id);
+        console.log(factorId);
+        this.factors.splice(factorId, 1);
+      }
     },
     saveFactors() {
       let lengths = this.factors.map(function(f){return f.data.length;});
@@ -134,6 +142,11 @@ export default {
         const parsed = JSON.stringify(this.newfactors);
       }
       localStorage.setItem('factors', parsed);
+
+      let currentMonth = new Date().getMonth() + 1;
+      let currentDate = new Date().getDate();
+      this.lastChangeDate = currentMonth + '-' + currentDate;
+      localStorage.setItem('lastChangeDate', this.lastChangeDate);
     },
     setRandomData: function (num) {
       this.factors = [];
@@ -142,7 +155,8 @@ export default {
         newdata.push({
           id: i,
           label: 'Параметр'+i,
-          data: randomDataSet(num,1,5) 
+          data: randomDataSet(num,-3,3),
+          descr: 'Какое-то описание',
         });
       }
       this.factors = newdata;
@@ -153,7 +167,8 @@ export default {
         newdata.push({
           id: i,
           label: 'Параметр'+i,
-          data: [] 
+          data: [],
+          descr: 'Какое-то описание',
         });
       }
       this.factors = newdata;
@@ -171,8 +186,5 @@ export default {
   }
   .bg-dark {
       background-color: #233140 !important;
-  }
-  .factor-edit {
-    height: 23px;
   }
 </style>

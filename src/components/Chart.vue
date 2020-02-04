@@ -1,6 +1,9 @@
 <script>
 	import { Line } from 'vue-chartjs'
 
+	const addSubtractDate = require("add-subtract-date");
+	const datesBetween = require('dates-between');
+
 	let colors = [
 		"rgb(255, 99, 132)",   // red 
 		"rgb(255, 159, 64)",   // orange
@@ -24,25 +27,48 @@
 				let fdata = JSON.parse(JSON.stringify(this.factorsdata));
 				let chartlabels = [];
 				let chartdatasets = [];
-				this.showMonth == true? chartlabels = Array.from(Array(30+1).keys()) : chartlabels = Array.from(Array(14+1).keys()),
-				chartlabels.shift();
-				if (this.showMonth != true) {
+				// this.showMonth == true? chartlabels = Array.from(Array(30+1).keys()) : chartlabels = Array.from(Array(14+1).keys());
+				// chartlabels.shift();
+				
+				if (fdata.length > 0) {
 					// Находим самый длинный массив данных
 					let lengths = fdata.map(function(f){return f.data.length;});
 					var data_max = (Math.max.apply(Math, lengths));
-				}
-				chartdatasets = fdata.map((factor, i) => {
-					if (this.showMonth != true) {
-						if (data_max > 14) {
-							factor.data = factor.data.slice(data_max-14);
+
+					// new
+					let graphDays = 13;
+					if (this.showMonth == true) graphDays = 29;
+					if (data_max < graphDays+1) {
+						let startDate1 = addSubtractDate.subtract(new Date(), data_max-1, "day");
+						let endDate1 = addSubtractDate.add(new Date(startDate1.getTime()), graphDays, "day");
+						for (const date of datesBetween(startDate1, endDate1)) {
+							let month = date.getMonth() + 1;
+						    chartlabels.push(date.getDate() + '/' + month);
 						}
 					}
-					factor.borderColor = colors[i];
-					factor.backgroundColor = colors[i]; 
-					factor.fill = false; 
-					factor.tension = 0.2; 
-					return factor;
-				});
+					if (data_max >= graphDays+1) { 
+						let startDate2 = addSubtractDate.subtract(new Date(), graphDays-1, "day");
+						let endDate2 = new Date();
+						for (const date of datesBetween(startDate2, endDate2)) {
+							let month = date.getMonth() + 1;
+						    chartlabels.push(date.getDate() + '/' + month);
+						}
+					}			
+					// end new
+
+					chartdatasets = fdata.map((factor, i) => {
+						if (this.showMonth != true) {
+							if (data_max > 14) {
+								factor.data = factor.data.slice(data_max-14);
+							}
+						}
+						factor.borderColor = colors[i];
+						factor.backgroundColor = colors[i]; 
+						factor.fill = false; 
+						factor.tension = 0.2; 
+						return factor;
+					});
+				}
 				return {
 					labels: chartlabels,
 					datasets: chartdatasets
