@@ -12,22 +12,35 @@
 
         <!-- Right aligned nav items -->
         <b-navbar-nav class="ml-auto">
+          
+          <b-nav-form>
+              <b-form-radio-group
+              v-model="showMonth"
+              buttons
+              name="radios-btn-default"
+              size="sm"
+              button-variant="outline-primary"
+              >
+                <b-form-radio v-model="showMonth" v-bind:value="false">Неделя</b-form-radio>
+                <b-form-radio v-model="showMonth" v-bind:value="true">Месяц</b-form-radio>
+              </b-form-radio-group>
+          </b-nav-form>
 
           <b-nav-item-dropdown no-caret right>
             <template v-slot:button-content>
               <b-icon icon="list"/>
             </template>
+            <b-dropdown-item @click="addFactor">Добавить фактор</b-dropdown-item>
             <b-dropdown-item @click="setRandomData(14)">14 случайных записей</b-dropdown-item>
             <b-dropdown-item @click="setRandomData(30)">30 случайных записей</b-dropdown-item>
             <b-dropdown-item @click="removeAllData">Удалить данные и начать с начала</b-dropdown-item>
-            <b-dropdown-item @click="showMonth = !showMonth">Неделя/Месяц</b-dropdown-item>
-            <b-dropdown-item @click="addFactor">Добавить фактор</b-dropdown-item>
+            <b-dropdown-item @click="exportData">Показать данные для экспорта</b-dropdown-item>
           </b-nav-item-dropdown>
         </b-navbar-nav>
       </b-collapse>
     </b-navbar>
     <b-container fluid="lg" class="main-container border shadow-sm p-3 mt-5 bg-white rounded">
-      <b-row align-v="center" align-h="center" class="mt-3">
+      <b-row align-v="center" align-h="center" class="mt-3" cols="4">
         <Factor 
           v-for="factor in factors"
           v-bind:key="factor.id"
@@ -44,6 +57,9 @@
         </b-col>
       </b-row>
     </b-container>
+    <b-modal id="importExportModal" title="Экспорт данных" centered :hide-footer="true">
+      <div id="exportjson">{{JSON.stringify(this.factors)}}</div>
+    </b-modal>
   </div>
 </template>
 
@@ -149,29 +165,37 @@ export default {
       localStorage.setItem('lastChangeDate', this.lastChangeDate);
     },
     setRandomData: function (num) {
-      this.factors = [];
-      let newdata = [];
-      for (let i=1; i < 6; i++) {
-        newdata.push({
-          id: i,
-          label: 'Параметр'+i,
-          data: randomDataSet(num,-3,3),
-          descr: 'Какое-то описание',
-        });
+      if (confirm('Продолжить? Старые записи будут удалены.')) {
+        this.factors = [];
+        let newdata = [];
+        for (let i=1; i < 6; i++) {
+          newdata.push({
+            id: i,
+            label: 'Параметр'+i,
+            data: randomDataSet(num,-3,3),
+            descr: 'Какое-то описание',
+          });
+        }
+        this.factors = newdata;
       }
-      this.factors = newdata;
     },
     removeAllData: function () {
-      let newdata = [];
-      for (let i=1; i < 6; i++) {
-        newdata.push({
-          id: i,
-          label: 'Параметр'+i,
-          data: [],
-          descr: 'Какое-то описание',
-        });
+      if (confirm('Продолжить? Старые записи будут удалены.')) {
+        let newdata = [];
+        for (let i=1; i < 6; i++) {
+          newdata.push({
+            id: i,
+            label: 'Параметр'+i,
+            data: [],
+            descr: 'Какое-то описание',
+          });
+        }
+        this.factors = newdata;
       }
-      this.factors = newdata;
+    },
+    exportData: function () {
+      this.$bvModal.show('importExportModal');
+      // document.getElementById('exportjson').innerHTML = JSON.stringify(this.factors);
     }
   },
 }
@@ -186,5 +210,10 @@ export default {
   }
   .bg-dark {
       background-color: #233140 !important;
+  }
+  div#exportjson {
+      font-size: 10px;
+      background: #fff5d8;
+      padding: 8px;
   }
 </style>

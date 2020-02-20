@@ -115,7 +115,8 @@
 		height: 31px;
 	}
 	.editgroup {
-	    margin-top: -7px;
+	    max-width: 200px;
+	    margin: -7px auto 0 auto;
 	}
 	.factor-radio label:nth-of-type(7):hover {
 	    background: #fb0404;
